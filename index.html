@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>OSN SD 2026 - Kab. Sampang | Live Sync Data OSN</title>
+    <!-- SheetJS untuk ekspor Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #2c1a1f 0%, #1e2a3a 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #f0f5fa;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(25, 35, 45, 0.75);
+            backdrop-filter: blur(14px);
+            border-radius: 48px;
+            border: 1px solid rgba(220, 70, 70, 0.5);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #ff8a7a, #6eb0ff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .live-badge {
+            display: inline-block;
+            background: #c62828;
+            padding: 5px 18px;
+            border-radius: 40px;
+            animation: pulse 1.5s infinite;
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            box-shadow: 0 0 8px rgba(198,40,40,0.7);
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); background: #c62828; }
+            50% { opacity: 0.85; transform: scale(1.02); background: #e53935; box-shadow: 0 0 12px #e53935; }
+            100% { opacity: 1; transform: scale(1); background: #c62828; }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(35, 45, 55, 0.8);
+            backdrop-filter: blur(8px);
+            border-radius: 28px;
+            padding: 20px 12px;
+            text-align: center;
+            border-left: 4px solid #e53935;
+            border-right: 1px solid rgba(70, 130, 200, 0.4);
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            background: rgba(45, 58, 70, 0.9);
+            border-left: 4px solid #ff6b6b;
+            border-right: 2px solid #4285f4;
+        }
+
+        .stat-number {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: #ffb4a2;
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            color: #bdd4ff;
+        }
+
+        .filter-container {
+            background: rgba(28, 38, 48, 0.85);
+            border-radius: 28px;
+            padding: 20px 24px;
+            margin-bottom: 25px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(229, 57, 53, 0.35);
+        }
+
+        .filter-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #ffbcaf;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .export-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .excel-btn {
+            background: linear-gradient(135deg, #2e5e3b, #1e3a2f);
+            border: none;
+            padding: 8px 22px;
+            border-radius: 40px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .excel-btn:hover {
+            background: linear-gradient(135deg, #3a7a4a, #2a5a3a);
+            transform: scale(1.02);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+            align-items: flex-end;
+        }
+
+        .filter-item {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .filter-item label {
+            display: block;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+            color: #ffbcaf;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .filter-select {
+            width: 100%;
+            background: rgba(20, 30, 40, 0.95);
+            border: 1px solid rgba(229, 57, 53, 0.6);
+            padding: 12px 16px;
+            border-radius: 20px;
+            color: #f0f5fa;
+            font-size: 0.9rem;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .filter-select:hover,
+        .filter-select:focus {
+            border-color: #42a5f5;
+            background: #1f374b;
+            box-shadow: 0 0 0 2px rgba(66,165,245,0.3);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-top: 5px;
+        }
+
+        .reset-btn, .apply-btn {
+            padding: 8px 24px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.85rem;
+            font-weight: bold;
+            border: none;
+            backdrop-filter: blur(4px);
+        }
+
+        .reset-btn {
+            background: rgba(198, 40, 40, 0.25);
+            border: 1px solid rgba(229, 57, 53, 0.7);
+            color: #ffb4b0;
+        }
+
+        .reset-btn:hover {
+            background: rgba(198, 40, 40, 0.55);
+            color: white;
+            transform: scale(0.98);
+        }
+
+        .apply-btn {
+            background: rgba(33, 150, 243, 0.25);
+            border: 1px solid rgba(33, 150, 243, 0.7);
+            color: #bbdef5;
+        }
+
+        .apply-btn:hover {
+            background: rgba(33, 150, 243, 0.5);
+            color: white;
+            transform: scale(0.98);
+        }
+
+        .sync-status {
+            font-size: 0.75rem;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 12px;
+        }
+
+        .sync-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 10px;
+            background: #4caf50;
+            display: inline-block;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .filter-info {
+            font-size: 0.8rem;
+            background: rgba(0, 0, 0, 0.45);
+            padding: 10px 18px;
+            border-radius: 32px;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: 500;
+            border-left: 3px solid #e53935;
+            border-right: 1px solid #4285f4;
+        }
+
+        .table-container {
+            background: rgba(28, 38, 48, 0.85);
+            border-radius: 28px;
+            padding: 20px;
+            overflow-x: auto;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th, td {
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            vertical-align: middle;
+        }
+
+        th {
+            background: rgba(198, 60, 50, 0.25);
+            font-weight: 700;
+            color: #ffd9cf;
+            font-size: 0.8rem;
+            border-bottom: 2px solid #4285f4;
+        }
+
+        tr:hover {
+            background: rgba(66, 133, 244, 0.1);
+        }
+
+        .refresh-btn {
+            background: rgba(66, 133, 244, 0.25);
+            border: 1px solid #4285f4;
+            padding: 6px 18px;
+            border-radius: 40px;
+            cursor: pointer;
+            color: #b3d4ff;
+            transition: all 0.2s;
+            font-weight: bold;
+            font-size: 0.8rem;
+            margin-left: 12px;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(66, 133, 244, 0.45);
+            transform: scale(1.02);
+            color: white;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.7rem;
+            opacity: 0.8;
+            color: #b0c4de;
+            border-top: 1px solid #b3392f;
+            margin-top: 20px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            padding: 12px 24px;
+            border-radius: 50px;
+            z-index: 1100;
+            animation: slideIn 0.25s ease;
+            font-weight: bold;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            font-size: 0.85rem;
+        }
+
+        .toast-success { background: #1e6f3f; border-left: 5px solid #ff8a7a; }
+        .toast-error { background: #b71c1c; border-left: 5px solid #ffccbc; }
+        .toast-info { background: #0f4c71; border-left: 5px solid #64b5f6; }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #b0bedb;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            th, td { font-size: 0.7rem; padding: 8px 6px; }
+            .stat-number { font-size: 1.6rem; }
+            .export-group { margin-top: 8px; }
+            .filter-title { flex-direction: column; align-items: flex-start; }
+            .filter-group { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📋 OLIMPIADE SAINS NASIONAL (OSN) SD 2026</h1>
+        <h2 class="header-sub">KABUPATEN SAMPANG</h2>
+        <div class="live-badge">🔴 LIVE DATA - AUTO SYNC 30 DETIK</div>
+        <p style="margin-top: 12px;">
+            📅 Terakhir sync: <span id="lastUpdate" class="refresh-time">--:--:--</span>
+            <span class="sync-status" id="syncStatus"><span class="sync-dot"></span> Terhubung</span>
+        </p>
+    </div>
+
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-number">-</div><div class="stat-label">Total Peserta</div></div>
+        <div class="stat-card"><div class="stat-number">-</div><div class="stat-label">Sekolah</div></div>
+        <div class="stat-card"><div class="stat-number">-</div><div class="stat-label">Mandiri</div></div>
+        <div class="stat-card"><div class="stat-number">-</div><div class="stat-label">Menumpang</div></div>
+    </div>
+
+    <div class="filter-container">
+        <div class="filter-title">
+            <span>🔍 Filter Data (Kecamatan & Tempat Pelaksanaan)</span>
+            <div class="export-group">
+                <button id="exportExcelBtn" class="excel-btn">📎 Ekspor ke Excel (XLSX)</button>
+            </div>
+        </div>
+        <div class="filter-group">
+            <div class="filter-item">
+                <label>📍 Filter Kecamatan</label>
+                <select id="kecamatanFilter" class="filter-select"><option value="all">Semua Kecamatan</option></select>
+            </div>
+            <div class="filter-item">
+                <label>🏛️ Filter Tempat Pelaksanaan</label>
+                <select id="tempatFilter" class="filter-select"><option value="all">Semua Tempat</option></select>
+            </div>
+            <div class="filter-item">
+                <label>🏆 Filter Nama Lomba</label>
+                <select id="lombaFilter" class="filter-select"><option value="all">Semua Lomba</option></select>
+            </div>
+            <div class="filter-item">
+                <label>📌 Status Pelaksanaan</label>
+                <select id="statusFilter" class="filter-select"><option value="all">Semua Status</option></select>
+            </div>
+        </div>
+        <div class="filter-actions">
+            <button class="apply-btn" id="applyFilterBtn">✓ Terapkan Filter</button>
+            <button class="reset-btn" id="resetFilterBtn">↺ Reset Semua Filter</button>
+        </div>
+        <div class="filter-info" id="filterInfo">🔄 Menghubungkan ke Google Spreadsheet...</div>
+    </div>
+
+    <div class="table-container">
+        <h3>📋 DAFTAR LENGKAP PESERTA OSN SD 2026 
+            <button class="refresh-btn" id="manualRefreshBtn">⟳ Refresh Sekarang</button>
+        </h3>
+        <div style="overflow-x: auto;">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Nama Siswa</th>
+                        <th>Nama Sekolah</th>
+                        <th>Kecamatan</th>
+                        <th>Status</th>
+                        <th>Nama Lomba</th>
+                        <th>Tempat Pelaksanaan</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="7" class="empty-state"><div class="loading-spinner"></div> Menghubungkan ke server...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>📡 Data tersinkronisasi otomatis dari Google Spreadsheet setiap 30 detik | Kolom sesuai data asli</p>
+        <p>✅ Kolom: Nama Siswa | Nama Sekolah | Kecamatan | Status Pelaksanaan | Nama Lomba | Tempat Pelaksanaan</p>
+    </div>
+</div>
+
+<script>
+    // ======================== KONEKSI GOOGLE SPREADSHEET ========================
+    const API_BASE = "https://script.google.com/macros/s/AKfycby61Lc5Wqeb7ITPQ6ZOBJcAmULFgjoO9zpWIcqT2mHz9naAX3XUyz1SYIsDZydj21i0/exec";
+    
+    let masterData = [];
+    let filteredData = [];
+    let autoInterval = null;
+    let isSyncing = false;
+
+    let activeFilters = { kecamatan: "all", tempat: "all", lomba: "all", status: "all" };
+
+    function showToast(message, type = "info") {
+        const toast = document.createElement("div");
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 300); }, 3200);
+    }
+
+    function updateSyncStatus(isOnline) {
+        const statusSpan = document.getElementById("syncStatus");
+        if (statusSpan) {
+            if (isOnline) statusSpan.innerHTML = '<span class="sync-dot"></span> Terhubung';
+            else statusSpan.innerHTML = '<span style="background:#f44336; width:10px;height:10px;border-radius:10px;display:inline-block;"></span> Offline (Cache)';
+        }
+    }
+
+    async function fetchFromSpreadsheet() {
+        if (isSyncing) return;
+        isSyncing = true;
+        
+        try {
+            // Gunakan action=laporanLengkap untuk mendapatkan data dengan field yang lengkap
+            const url = `${API_BASE}?action=laporanLengkap&limit=0`;
+            
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 20000);
+            const response = await fetch(url, { method: "GET", cache: "no-store", mode: "cors", signal: controller.signal });
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const result = await response.json();
+            
+            console.log("API Response full:", JSON.stringify(result).substring(0, 500));
+            
+            let rawData = [];
+            // Coba berbagai kemungkinan struktur response
+            if (result && result.success === true && Array.isArray(result.data)) {
+                rawData = result.data;
+            } else if (Array.isArray(result)) {
+                rawData = result;
+            } else if (result && result.data && Array.isArray(result.data)) {
+                rawData = result.data;
+            } else if (result && result.laporan && Array.isArray(result.laporan)) {
+                rawData = result.laporan;
+            }
+            
+            if (rawData.length === 0) {
+                // Fallback: coba action laporan biasa
+                const fallbackUrl = `${API_BASE}?action=laporan&limit=0`;
+                const fbResponse = await fetch(fallbackUrl, { method: "GET", cache: "no-store" });
+                const fbResult = await fbResponse.json();
+                if (fbResult && fbResult.success && Array.isArray(fbResult.data)) {
+                    rawData = fbResult.data;
+                } else if (Array.isArray(fbResult)) {
+                    rawData = fbResult;
+                }
+            }
+            
+            if (rawData.length === 0) throw new Error("Data kosong dari server");
+            
+            // Mapping data dengan mencoba berbagai kemungkinan nama field
+            masterData = rawData.map(item => {
+                // Fungsi untuk mendapatkan nilai dari berbagai kemungkinan key
+                const getValue = (possibleKeys) => {
+                    for (let key of possibleKeys) {
+                        if (item[key] !== undefined && item[key] !== null && item[key] !== "") {
+                            let val = item[key];
+                            if (typeof val === 'string') val = val.trim();
+                            return val;
+                        }
+                    }
+                    return "";
+                };
+                
+                // Field mapping sesuai dengan struktur dari Apps Script
+                return {
+                    namaSiswa: getValue(["namaSiswa", "NamaSiswa", "nama_siswa", "Nama Siswa", "siswa", "nama"]),
+                    sekolah: getValue(["namaSekolah", "NamaSekolah", "nama_sekolah", "Nama Sekolah", "sekolah", "lembaga"]),
+                    kecamatan: getValue(["kecamatan", "Kecamatan", "kec", "Kec"]),
+                    status: getValue(["statusPelaksanaan", "StatusPelaksanaan", "status_pelaksanaan", "Status Pelaksanaan", "status"]),
+                    lomba: getValue(["namaLomba", "NamaLomba", "nama_lomba", "Nama Lomba", "lomba", "bidang"]),
+                    tempat: getValue(["tempatPelaksanaan", "TempatPelaksanaan", "tempat_pelaksanaan", "Tempat Pelaksanaan", "tempat", "lokasi"])
+                };
+            }).filter(item => {
+                // Filter data yang valid (minimal memiliki nama siswa dan sekolah)
+                const isValid = item.namaSiswa !== "" && item.namaSiswa !== null;
+                if (!isValid) console.log("Filtered out:", item);
+                return isValid;
+            });
+            
+            if (masterData.length === 0) throw new Error("Tidak ada data valid setelah mapping");
+            
+            // Debug: tampilkan sample data
+            if (masterData.length > 0) {
+                console.log("Sample data after mapping:", masterData[0]);
+                console.log("Tempat Pelaksanaan value:", masterData[0].tempat);
+            }
+            
+            updateSyncStatus(true);
+            showToast(`✅ Sync berhasil: ${masterData.length} peserta`, "success");
+            updateLastSyncTime();
+            return true;
+            
+        } catch (err) {
+            console.warn("Gagal fetch:", err.message);
+            updateSyncStatus(false);
+            showToast(`⚠️ Gagal sync: ${err.message}`, "error");
+            return false;
+        } finally {
+            isSyncing = false;
+        }
+    }
+
+    function updateLastSyncTime() {
+        document.getElementById("lastUpdate").innerText = new Date().toLocaleString("id-ID");
+    }
+
+    function updateDropdowns() {
+        const kecamatanSet = new Set(masterData.map(d => d.kecamatan).filter(k => k && k !== ""));
+        const tempatSet = new Set(masterData.map(d => d.tempat).filter(t => t && t !== ""));
+        const lombaSet = new Set(masterData.map(d => d.lomba).filter(l => l && l !== ""));
+        const statusSet = new Set(masterData.map(d => d.status).filter(s => s && s !== ""));
+        
+        const kecSelect = document.getElementById("kecamatanFilter");
+        if (kecSelect) {
+            kecSelect.innerHTML = '<option value="all">📍 Semua Kecamatan</option>' + 
+                Array.from(kecamatanSet).sort().map(k => `<option value="${escapeHtml(k)}">${escapeHtml(k)} (${masterData.filter(d => d.kecamatan === k).length})</option>`).join('');
+            if (activeFilters.kecamatan !== "all" && kecamatanSet.has(activeFilters.kecamatan)) kecSelect.value = activeFilters.kecamatan;
+            else kecSelect.value = "all";
+        }
+        
+        const tempatSelect = document.getElementById("tempatFilter");
+        if (tempatSelect) {
+            tempatSelect.innerHTML = '<option value="all">🏛️ Semua Tempat</option>' + 
+                Array.from(tempatSet).sort().map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)} (${masterData.filter(d => d.tempat === t).length})</option>`).join('');
+            if (activeFilters.tempat !== "all" && tempatSet.has(activeFilters.tempat)) tempatSelect.value = activeFilters.tempat;
+            else tempatSelect.value = "all";
+        }
+        
+        const lombaSelect = document.getElementById("lombaFilter");
+        if (lombaSelect) {
+            lombaSelect.innerHTML = '<option value="all">🏆 Semua Lomba</option>' + 
+                Array.from(lombaSet).sort().map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)} (${masterData.filter(d => d.lomba === l).length})</option>`).join('');
+            if (activeFilters.lomba !== "all" && lombaSet.has(activeFilters.lomba)) lombaSelect.value = activeFilters.lomba;
+            else lombaSelect.value = "all";
+        }
+        
+        const statusSelect = document.getElementById("statusFilter");
+        if (statusSelect) {
+            statusSelect.innerHTML = '<option value="all">📌 Semua Status</option>' + 
+                Array.from(statusSet).sort().map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)} (${masterData.filter(d => d.status === s).length})</option>`).join('');
+            if (activeFilters.status !== "all" && statusSet.has(activeFilters.status)) statusSelect.value = activeFilters.status;
+            else statusSelect.value = "all";
+        }
+    }
+
+    function applyFiltersAndRender() {
+        const kecVal = document.getElementById("kecamatanFilter")?.value || "all";
+        const tempatVal = document.getElementById("tempatFilter")?.value || "all";
+        const lombaVal = document.getElementById("lombaFilter")?.value || "all";
+        const statusVal = document.getElementById("statusFilter")?.value || "all";
+        
+        activeFilters = { kecamatan: kecVal, tempat: tempatVal, lomba: lombaVal, status: statusVal };
+        
+        filteredData = masterData.filter(item => {
+            if (activeFilters.kecamatan !== "all" && item.kecamatan !== activeFilters.kecamatan) return false;
+            if (activeFilters.tempat !== "all" && item.tempat !== activeFilters.tempat) return false;
+            if (activeFilters.lomba !== "all" && item.lomba !== activeFilters.lomba) return false;
+            if (activeFilters.status !== "all" && item.status !== activeFilters.status) return false;
+            return true;
+        });
+        
+        renderStats();
+        renderTable();
+        updateFilterInfo();
+    }
+
+    function renderStats() {
+        const total = filteredData.length;
+        const uniqueSchools = new Set(filteredData.map(d => d.sekolah).filter(s => s)).size;
+        const mandiriCount = filteredData.filter(d => d.status === "Mandiri").length;
+        const menumpangCount = filteredData.filter(d => d.status === "Menumpang").length;
+        
+        document.getElementById("statsGrid").innerHTML = `
+            <div class="stat-card"><div class="stat-number">${total}</div><div class="stat-label">Total Peserta</div></div>
+            <div class="stat-card"><div class="stat-number">${uniqueSchools}</div><div class="stat-label">Sekolah</div></div>
+            <div class="stat-card"><div class="stat-number">${mandiriCount}</div><div class="stat-label">Mandiri</div></div>
+            <div class="stat-card"><div class="stat-number">${menumpangCount}</div><div class="stat-label">Menumpang</div></div>
+        `;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return "";
+        return String(str).replace(/[&<>]/g, m => m === "&" ? "&amp;" : m === "<" ? "&lt;" : "&gt;");
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById("tableBody");
+        if (!tbody) return;
+        if (filteredData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="empty-state">📭 Tidak ada data sesuai filter</td></tr>`;
+            return;
+        }
+        let rows = "";
+        filteredData.forEach((item, idx) => {
+            rows += `<tr>
+                <td>${idx+1}</td>
+                <td><strong>${escapeHtml(item.namaSiswa)}</strong></td>
+                <td>🏫 ${escapeHtml(item.sekolah || "-")}</td>
+                <td>📍 ${escapeHtml(item.kecamatan || "-")}</td>
+                <td>${escapeHtml(item.status || "-")}</td>
+                <td>📚 ${escapeHtml(item.lomba || "-")}</td>
+                <td>📌 ${escapeHtml(item.tempat || "-")}</td>
+            </tr>`;
+        });
+        tbody.innerHTML = rows;
+    }
+
+    function updateFilterInfo() {
+        const infoDiv = document.getElementById("filterInfo");
+        let filterText = [];
+        if (activeFilters.kecamatan !== "all") filterText.push(`Kec: ${activeFilters.kecamatan}`);
+        if (activeFilters.tempat !== "all") filterText.push(`Tempat: ${activeFilters.tempat}`);
+        if (activeFilters.lomba !== "all") filterText.push(`Lomba: ${activeFilters.lomba}`);
+        if (activeFilters.status !== "all") filterText.push(`Status: ${activeFilters.status}`);
+        const filterDesc = filterText.length ? filterText.join(" · ") : "Semua filter";
+        
+        const withTempat = masterData.filter(d => d.tempat && d.tempat !== "").length;
+        infoDiv.innerHTML = `📊 ${filterDesc} | Menampilkan ${filteredData.length} dari ${masterData.length} peserta | Data dengan Tempat Pelaksanaan: ${withTempat} peserta`;
+    }
+
+    function resetFilters() {
+        document.getElementById("kecamatanFilter").value = "all";
+        document.getElementById("tempatFilter").value = "all";
+        document.getElementById("lombaFilter").value = "all";
+        document.getElementById("statusFilter").value = "all";
+        activeFilters = { kecamatan: "all", tempat: "all", lomba: "all", status: "all" };
+        applyFiltersAndRender();
+        showToast("↺ Semua filter direset", "info");
+    }
+
+    function exportToExcel() {
+        if (filteredData.length === 0) {
+            showToast("⚠️ Tidak ada data untuk diekspor", "error");
+            return;
+        }
+        const excelRows = [["No", "Nama Siswa", "Nama Sekolah", "Kecamatan", "Status Pelaksanaan", "Nama Lomba", "Tempat Pelaksanaan"]];
+        filteredData.forEach((item, idx) => {
+            excelRows.push([idx+1, item.namaSiswa, item.sekolah, item.kecamatan, item.status, item.lomba, item.tempat]);
+        });
+        const ws = XLSX.utils.aoa_to_sheet(excelRows);
+        ws['!cols'] = [{wch:6},{wch:35},{wch:35},{wch:15},{wch:15},{wch:30},{wch:30}];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "OSN_Sampang_Live");
+        const now = new Date();
+        const filename = `OSN_Sampang_LiveSync_${now.toISOString().slice(0,19).replace(/:/g, '-')}.xlsx`;
+        XLSX.writeFile(wb, filename);
+        showToast(`✅ Ekspor sukses: ${filteredData.length} baris data lengkap`, "success");
+    }
+
+    async function manualRefresh() {
+        showToast("⟳ Menyinkronkan data dari Google Spreadsheet...", "info");
+        await fetchFromSpreadsheet();
+        updateDropdowns();
+        applyFiltersAndRender();
+    }
+
+    function startAutoRefresh() {
+        if (autoInterval) clearInterval(autoInterval);
+        autoInterval = setInterval(async () => {
+            await fetchFromSpreadsheet();
+            updateDropdowns();
+            applyFiltersAndRender();
+        }, 30000);
+    }
+
+    function bindEvents() {
+        document.getElementById("applyFilterBtn")?.addEventListener("click", () => applyFiltersAndRender());
+        document.getElementById("resetFilterBtn")?.addEventListener("click", resetFilters);
+        document.getElementById("manualRefreshBtn")?.addEventListener("click", manualRefresh);
+        document.getElementById("exportExcelBtn")?.addEventListener("click", exportToExcel);
+        
+        document.getElementById("kecamatanFilter")?.addEventListener("change", () => applyFiltersAndRender());
+        document.getElementById("tempatFilter")?.addEventListener("change", () => applyFiltersAndRender());
+        document.getElementById("lombaFilter")?.addEventListener("change", () => applyFiltersAndRender());
+        document.getElementById("statusFilter")?.addEventListener("change", () => applyFiltersAndRender());
+    }
+
+    async function init() {
+        bindEvents();
+        await fetchFromSpreadsheet();
+        updateDropdowns();
+        applyFiltersAndRender();
+        startAutoRefresh();
+    }
+    
+    init();
+</script>
+</body>
+</html>
